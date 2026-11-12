@@ -52,6 +52,9 @@ button{font:inherit;border:0;cursor:pointer}
 .b:disabled{opacity:.35}
 .b.next{flex:2.1;background:var(--teal);color:#fff;box-shadow:0 6px 16px rgba(22,115,152,.35);font-size:18px}
 .b:active{transform:scale(.98)}
+.b.next.glow{animation:glow 1.5s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 2px #fff,0 0 0 5px #35b6e6,0 0 0 5px rgba(53,182,230,.55)}50%{box-shadow:0 0 0 2px #fff,0 0 0 5px #35b6e6,0 0 0 15px rgba(53,182,230,0)}}
+@media (prefers-reduced-motion:reduce){.b.next.glow{animation:none;box-shadow:0 0 0 2px #fff,0 0 0 5px #35b6e6}}
 #zoom{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;z-index:9;overflow:auto;direction:ltr}
 #zoom.open{display:block}
 #zoom img{display:block;width:200%;max-width:none;height:auto}
@@ -105,15 +108,18 @@ function render(){
   main.scrollTop=0;
   $('prev').disabled=cur===0;
   $('again').disabled=!started;
+  glow(!started);
   $('next').textContent=!started?'בואו נתחיל':(cur===n-1?'להתחיל מחדש':(s.kind==='hero'?'הלאה':'ביצעתי, הלאה'));
 }
+function glow(on){ $('next').classList.toggle('glow',on); }
 function play(){
   const s=STEPS[cur];
-  try{ au.pause(); au.src='data:audio/mpeg;base64,'+s.audio; au.currentTime=0; const p=au.play(); if(p&&p.catch)p.catch(()=>setPlaying(false,'לא ניתן להשמיע — הקישו "השמע שוב"')); }catch(e){}
+  glow(false);
+  try{ au.pause(); au.src='data:audio/mpeg;base64,'+s.audio; au.currentTime=0; const p=au.play(); if(p&&p.catch)p.catch(()=>{setPlaying(false,'לא ניתן להשמיע — הקישו "השמע שוב"');glow(true)}); }catch(e){}
 }
 function setPlaying(on,txt){ $('playing').classList.toggle('on',on); $('ptxt').textContent=txt||(on?'מושמע הסבר…':''); }
 au.addEventListener('playing',()=>setPlaying(true));
-au.addEventListener('ended',()=>setPlaying(false,'ההסבר הסתיים'));
+au.addEventListener('ended',()=>{setPlaying(false,'ההסבר הסתיים');glow(true)});
 au.addEventListener('pause',()=>{ if(!au.ended) setPlaying(false); });
 $('next').onclick=()=>{
   if(!started){ started=true; render(); play(); return; }
