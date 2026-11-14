@@ -111,7 +111,7 @@ function render(){
   glow(!started);
   $('next').textContent=!started?'Let’s start':(cur===n-1?'Start over':(s.kind==='hero'?'Next':'Done, next'));
 }
-function glow(on){ $('next').classList.toggle('glow',on); }
+function glow(on){ $('next').classList.toggle('glow',on&&!(started&&cur===STEPS.length-1)); }
 function play(){
   const s=STEPS[cur];
   glow(false);

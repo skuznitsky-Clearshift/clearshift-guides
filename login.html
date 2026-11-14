@@ -117,7 +117,7 @@ function render(){
   glow(!started);
   $('next').textContent=!started?'בואו נתחיל':(cur===n-1?'להתחיל מחדש':(s.kind==='hero'?'הלאה':'ביצעתי, הלאה'));
 }
-function glow(on){ $('next').classList.toggle('glow',on); }
+function glow(on){ $('next').classList.toggle('glow',on&&!(started&&cur===STEPS.length-1)); }
 function play(){
   const s=STEPS[cur];
   glow(false);

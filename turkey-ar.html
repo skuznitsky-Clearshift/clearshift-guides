@@ -111,7 +111,7 @@ function render(){
   glow(!started);
   $('next').textContent=!started?'هيا نبدأ':(cur===n-1?'البدء من جديد':(s.kind==='hero'?'التالي':'تمّ، التالي'));
 }
-function glow(on){ $('next').classList.toggle('glow',on); }
+function glow(on){ $('next').classList.toggle('glow',on&&!(started&&cur===STEPS.length-1)); }
 function play(){
   const s=STEPS[cur];
   glow(false);
