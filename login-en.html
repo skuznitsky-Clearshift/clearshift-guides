@@ -52,6 +52,26 @@ button{font:inherit;border:0;cursor:pointer}
 .b:disabled{opacity:.35}
 .b.next{flex:2.1;background:var(--teal);color:#fff;box-shadow:0 6px 16px rgba(22,115,152,.35);font-size:18px}
 .b:active{transform:scale(.98)}
+.wa{background:#0b141a;border-radius:18px;overflow:hidden;box-shadow:var(--sh,0 8px 24px rgba(0,0,0,.12));direction:ltr;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wa-h{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#1f2c33;color:#e9edef;font-weight:600;font-size:16px}
+.wa-h i{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#19a0b8,#167398);display:block;position:relative}
+.wa-h i:after{content:"";position:absolute;left:9px;top:9px;width:13px;height:13px;border-left:4px solid #fff;border-bottom:4px solid #fff;border-radius:2px}
+.wa-b{height:400px;padding:12px 10px 14px;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;overflow:hidden}
+.wa-m{max-width:88%;border-radius:12px;padding:9px 11px 6px;color:#e9edef;font-size:14.5px;line-height:1.45;opacity:0;transform:translateY(10px);transition:opacity .35s,transform .35s;display:none;flex:0 0 auto}
+.wa-m.on{display:block}.wa-m.in{opacity:1;transform:none}
+.wa-in{background:#1f2c33;align-self:flex-start;border-top-left-radius:3px}
+.wa-out{background:#005c4b;align-self:flex-end;border-top-right-radius:3px}
+.wa-m b{font-weight:700}.wa-t{font-size:16px;font-weight:700;margin-bottom:4px}
+.wa-m .r{text-align:right;margin:5px 0}.wa-m time{display:block;text-align:right;font-size:11px;color:#8696a0;margin-top:2px}
+.wa-btn{display:flex;align-items:center;justify-content:center;gap:8px;border-top:1px solid #2f3b43;margin:6px -11px 0;padding:9px 0 5px;color:#8696a0;font-size:15px;position:relative;transition:background .2s,color .2s}
+.wa-btn u{width:15px;height:15px;border-radius:50%;display:block}.wa-btn .g{background:#25d366}.wa-btn .d{background:#ef3b3b}
+.wa-btn.hit{background:#2b3b44;color:#e9edef}
+.wa-tap{position:absolute;left:58%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(255,255,255,.35);border:2px solid rgba(255,255,255,.9);opacity:0;transform:scale(1.6);pointer-events:none}
+.wa-btn.hit .wa-tap{animation:watap .7s ease-out}
+@keyframes watap{0%{opacity:0;transform:scale(1.7)}35%{opacity:1;transform:scale(.8)}100%{opacity:0;transform:scale(1.25)}}
+.wa-q{border-left:4px solid #ff8fb1;background:rgba(0,0,0,.22);border-radius:7px;padding:6px 9px;font-size:13px;margin-bottom:6px}.wa-q em{font-style:normal;color:#ff8fb1;font-weight:700;display:block}
+.wa-cap{font-size:13px;color:var(--mut,#6b7a86);text-align:center;margin:8px 0 2px}
+@media (prefers-reduced-motion:reduce){.wa-m{transition:none}.wa-btn.hit .wa-tap{animation:none}}
 .go{display:block;text-align:center;background:var(--teal);color:#fff!important;font-weight:800;font-size:18px;padding:13px 16px;border-radius:14px;margin-top:10px;text-decoration:none;box-shadow:0 6px 16px rgba(22,115,152,.3)}
 .hero .go{background:#fff;color:var(--dark)!important;margin-top:16px;box-shadow:none}
 @keyframes gohop{0%,100%{transform:translateY(0);box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 0 3px rgba(255,255,255,.55)}50%{transform:translateY(-7px);box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 0 16px rgba(255,255,255,0)}}
@@ -100,16 +120,28 @@ const NEXT={"w": ["world-en.html", "Guide: paying a supplier abroad ↗"]};(fun
 const $=id=>document.getElementById(id);
 const au=$('au'), main=$('main');
 let cur=0, started=false;
+let waTm=[];function waStop(){waTm.forEach(clearTimeout);waTm=[];}
+function waHtml(w){return '<div class="wa" aria-label="'+w.cap+'"><div class="wa-h"><i></i>Clearshift</div><div class="wa-b" id="wab">'+
+ '<div class="wa-m wa-in" id="wa1"><div class="wa-t">Order For Verification</div><div class="r"><b>Account:</b> <bdi>'+w.acc+'</bdi></div><div class="r"><b>Order Number:</b> 123456</div><div class="r"><b>Details:</b> Buy 50,000.00 USD<br><b>Destination:</b> <bdi>'+w.dest+'</bdi><br><b>Date of Exchange:</b> <bdi>'+w.rate+'</bdi> USD/ILS</div><div class="wa-btn" id="waA"><u class="g"></u>Approve<span class="wa-tap"></span></div><div class="wa-btn"><u class="d"></u>Deny</div></div>'+
+ '<div class="wa-m wa-out" id="wa2"><div class="wa-q"><em>Clearshift</em>Order For Verification<br>Order Number: 123456</div><span style="display:flex;align-items:center;gap:7px"><u style="width:14px;height:14px;border-radius:50%;background:#25d366;display:block"></u>Approve</span><time>✓✓</time></div>'+
+ '<div class="wa-m wa-in" id="wa3"><div><b>🟢 Approved:</b></div>Your order has been successfully verified.<div style="margin-top:8px"><b>Order Number:</b> 123456</div></div>'+
+ '</div></div><p class="wa-cap">'+w.cap+'</p>';}
+function waRun(){waStop();const g=id=>document.getElementById(id);if(!g('wa1'))return;
+ const show=id=>{const e=g(id);if(!e)return;e.classList.add('on');requestAnimationFrame(()=>requestAnimationFrame(()=>e.classList.add('in')));};
+ const reset=()=>{['wa1','wa2','wa3'].forEach(id=>{const e=g(id);if(e)e.classList.remove('on','in')});const a=g('waA');if(a)a.classList.remove('hit');};
+ const cyc=()=>{reset();waTm=[setTimeout(()=>show('wa1'),300),setTimeout(()=>{const a=g('waA');if(a)a.classList.add('hit')},2600),setTimeout(()=>show('wa2'),3500),setTimeout(()=>show('wa3'),4700),setTimeout(cyc,10500)];};
+ cyc();}
 function render(){
+  waStop();
   const s=STEPS[cur], n=STEPS.length;
   $('count').textContent=cur===0?'Quick guide':(cur+' of '+(n-1));
   $('prog').style.width=(cur/(n-1)*100)+'%';
   if(s.kind==='hero'){ main.innerHTML='<div class="hero">'+HERO[cur]+'</div>'+(cur===0?'<p class="note">The guide moves on only when you tap — no need to rush. Each step is also explained by voice.</p>':''); }
   else{
     main.innerHTML='<span class="kick">'+s.kick+'</span><h1>'+s.title+'</h1>'+
-      '<button class="shot" id="shot"><img alt="Screenshot of this step" src="data:image/jpeg;base64,'+s.img+'"><span>Tap to enlarge</span></button>'+
+      (s.wa?waHtml(s.wa):'<button class="shot" id="shot"><img alt="Screenshot of this step" src="data:image/jpeg;base64,'+s.img+'"><span>Tap to enlarge</span></button>')+
       '<div class="card">'+s.rows.map(r=>'<div class="row">'+r+'</div>').join('')+'</div>'+(s.tip?'<div class="tip">'+s.tip+'</div>':'');
-    $('shot').onclick=()=>{ $('zimg').src='data:image/jpeg;base64,'+s.img; $('zoom').classList.add('open'); const z=$('zoom'); requestAnimationFrame(()=>{z.scrollLeft=(z.scrollWidth-z.clientWidth)/2}); };
+    if(s.wa){waRun();}else $('shot').onclick=()=>{ $('zimg').src='data:image/jpeg;base64,'+s.img; $('zoom').classList.add('open'); const z=$('zoom'); requestAnimationFrame(()=>{z.scrollLeft=(z.scrollWidth-z.clientWidth)/2}); };
   }
   main.scrollTop=0;
   $('prev').disabled=cur===0;
