@@ -88,8 +88,17 @@ button{font:inherit;border:0;cursor:pointer}
 }
 @media (prefers-reduced-motion:reduce){.bar i{transition:none}.on .eq i{animation:none}}
 </style>
+<style id="lgcss">
+#lang{position:fixed;inset:0;z-index:999;background:linear-gradient(160deg,#167398,#0f5673);display:flex;align-items:center;justify-content:center;padding:24px;direction:ltr}
+#lang .lgbox{width:100%;max-width:380px;text-align:center;color:#fff;font-family:Heebo,Arial,sans-serif}
+#lang .lglogo{font-size:34px;font-weight:800;letter-spacing:.3px;margin-bottom:22px}
+#lang .lgt{font-size:17px;line-height:1.7;opacity:.95;margin-bottom:22px}
+#lang a{display:block;background:#fff;color:#0f5673;font-size:22px;font-weight:800;padding:16px;border-radius:16px;margin:12px 0;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.18);-webkit-tap-highlight-color:transparent;user-select:none}
+#lang a:active{transform:scale(.98)}#lang a.wait{opacity:.6}
+</style>
 </head>
 <body>
+<div id="lang"><div class="lgbox"><div class="lglogo">Clearshift</div><div class="lgt"><span lang="he">בחרו שפה</span><br><span lang="en">Choose a language</span><br><span lang="ar">اختاروا اللغة</span></div><a role="button" data-l="he" lang="he">עברית</a><a role="button" data-l="en" lang="en">English</a><a role="button" data-l="ar" lang="ar">العربية</a></div></div>
 <div id="app">
   <header>
     <div class="brand"><span class="logo">Clearshift</span><span class="count" id="count"></span></div>
@@ -165,6 +174,28 @@ $('zclose').onclick=()=>$('zoom').classList.remove('open');
 $('zoom').onclick=e=>{ if(e.target.id==='zoom'||e.target.id==='zimg') $('zoom').classList.remove('open'); };
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') $('zoom').classList.remove('open'); });
 render();
+</script>
+<script>
+(function(){const F={"ar": "world-ar.html", "en": "world-en.html"};const SIL='data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//NwwAAAAAAAAAAAAEluZm8AAAAPAAAADgAAA5IAQUFBQUFBQVBQUFBQUFBeXl5eXl5ebW1tbW1tbXx8fHx8fHyKioqKioqKmZmZmZmZmaioqKioqKiotra2tra2tsXFxcXFxcXU1NTU1NTU4uLi4uLi4vHx8fHx8fH/////////AAAAAExhdmM2MC4zMQAAAAAAAAAAAAAAACQDaQAAAAAAAAOSa0I+rwAAAAAAAAAAAAAAAAD/8yDEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVV//MixCcAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVX/8yDETwAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVV//MgxHYAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVf/zIMSdAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVX/8yLExAAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVf/zIMTYAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVX/8yDE2AAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVV//MgxNgAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zIsTXAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//MgxNgAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/zIMTYAAADSAAAAABVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/8yDE2AAAA0gAAAAAVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//MixNcAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=';const box=document.getElementById('lang');
+box.addEventListener('click',async function(e){const a=e.target.closest('a[data-l]');if(!a||box.dataset.busy)return;const l=a.dataset.l;
+ try{au.src=SIL;const p=au.play();if(p&&p.catch)p.catch(function(){})}catch(_){}
+ if(!F[l]){box.remove();started=true;render();play();return;}
+ box.dataset.busy=1;a.classList.add('wait');
+ try{const t=await fetch(F[l],{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.text()});
+  const d=new DOMParser().parseFromString(t,'text/html');
+  const code=Array.from(d.querySelectorAll('script:not([src])')).map(function(s){return s.textContent}).join('\n;');
+  if(code.indexOf('function render')<0)throw 0;
+  setPlaying=function(){};glow=function(){};started=true;
+  const old=au;try{old.pause()}catch(_){}
+  document.documentElement.lang=d.documentElement.lang;document.documentElement.dir=d.documentElement.dir;
+  Array.from(document.querySelectorAll('style')).forEach(function(s){s.remove()});
+  d.querySelectorAll('style').forEach(function(s){const n=document.createElement('style');n.textContent=s.textContent;document.head.appendChild(n)});
+  document.title=d.title;d.querySelectorAll('script').forEach(function(s){s.remove()});
+  document.body.innerHTML=d.body.innerHTML;
+  const na=document.getElementById('au');if(na)na.replaceWith(old);
+  (new Function(code+'\n;started=true;render();play();'))();
+ }catch(_){location.href=F[l]}
+});})();
 </script>
 </body>
 </html>
