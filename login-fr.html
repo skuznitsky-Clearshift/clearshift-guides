@@ -180,5 +180,5 @@ render();
 (function(){try{au.src='data:audio/mpeg;base64,'+STEPS[0].audio;const p=au.play();if(p&&p.then)p.then(()=>{if(!started){started=true;render();}}).catch(()=>{});}catch(_){ }})();
 document.addEventListener('pointerdown',e=>{if(!started&&!e.target.closest('#next')&&!e.target.closest('a'))$('next').click();},true);
 </script>
-</body>
+<script src="pip.js?v=2"></script></body>
 </html>

@@ -2,7 +2,30 @@
 // Picking a language opens the real portal in a new tab and keeps the guide in a small always-on-top window.
 (function(){
   var Q=new URLSearchParams(location.search);
-  var PORTAL='https://www1.clearshiftinc.com/portal';
+  var FILE=location.pathname.split('/').pop()||'index.html';
+  var ISLOGIN=/^login/.test(FILE);
+  var SETPW='https://www1.clearshiftinc.com/portal/setpassword';
+  var PORTAL=ISLOGIN?SETPW:'https://www1.clearshiftinc.com/portal';
+  var FLANG=(FILE.match(/-(ar|en|fr)\.html$/)||[])[1]||'he';
+  var UA=navigator.userAgent||'';
+  // --- phones: a guide opened inside an app (in-app browser) must open the portal in the real browser ---
+  (function(){
+    var andr=/Android/i.test(UA),ios=/iPhone|iPad|iPod/i.test(UA);
+    var inapp=/FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\/|GSA\/|; wv\)/i.test(UA)||(ios&&!/Safari\//.test(UA));
+    if(!inapp||!(andr||ios))return;
+    document.addEventListener('click',function(e){
+      var a=e.target&&e.target.closest&&e.target.closest('a[href*="clearshiftinc.com"]');if(!a)return;
+      var u=a.href,ext=andr?'intent://'+u.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(u)+';end'
+                          :'x-safari-'+u;
+      e.preventDefault();location.href=ext;
+    },true);
+  })();
+  var DONE={he:'דף ההרשמה לפורטל <b>כבר פתוח</b> בלשונית שליד המדריך.',en:'The portal sign-up page is <b>already open</b> in the tab next to this guide.',
+            ar:'صفحة التسجيل في البوابة <b>مفتوحة بالفعل</b> في علامة التبويب بجانب الدليل.',fr:'La page d’inscription au portail est <b>déjà ouverte</b> dans l’onglet à côté du guide.'};
+  var TXTL={he:['דף ההרשמה נפתח בלשונית חדשה. החלון הקטן עם המדריך נשאר תמיד מעל, גם כשלוחצים בדף.','לדף ההרשמה'],
+            en:['The sign-up page opened in a new tab. The small guide window always stays on top, even when you click in the page.','Open the sign-up page'],
+            ar:['تم فتح صفحة التسجيل في علامة تبويب جديدة. نافذة الدليل الصغيرة تبقى دائماً في الأعلى، حتى عند الضغط داخل الصفحة.','فتح صفحة التسجيل'],
+            fr:['La page d’inscription s’est ouverte dans un nouvel onglet. La petite fenêtre du guide reste toujours au premier plan, même quand vous cliquez dans la page.','Ouvrir la page d’inscription']};
   var TXT={he:['המדריך פתוח בחלון הצף','הפורטל נפתח בלשונית חדשה. החלון הקטן עם המדריך נשאר תמיד מעל, גם כשלוחצים בפורטל.','לפתיחת הפורטל','להחזיר את המדריך לכאן'],
            en:['The guide is open in the floating window','The portal opened in a new tab. The small guide window always stays on top, even when you click in the portal.','Open the portal','Bring the guide back here'],
            ar:['الدليل مفتوح في النافذة العائمة','تم فتح البوابة في علامة تبويب جديدة. نافذة الدليل الصغيرة تبقى دائماً في الأعلى، حتى عند الضغط داخل البوابة.','فتح البوابة','إعادة الدليل إلى هنا'],
@@ -10,11 +33,14 @@
   if(Q.get('pip')==='1'){            // we are inside the floating window: skip the language screen and start
     var go=function(){var b=document.querySelector('#lang a[data-l="he"]');if(b)b.click()};
     if(document.readyState==='complete')setTimeout(go,300);else window.addEventListener('load',function(){setTimeout(go,300)});
+    var fix=function(){var a=document.querySelector('a.go[href*="setpassword"]');if(a&&a.parentElement)a.parentElement.innerHTML=DONE[FLANG]||DONE.he};
+    var st=function(){fix();try{new MutationObserver(fix).observe(document.body,{childList:true,subtree:true})}catch(e){}};
+    if(document.body)st();else document.addEventListener('DOMContentLoaded',st);
     return;
   }
-  var can=('documentPictureInPicture' in window)&&window.matchMedia('(min-width:900px)').matches&&Q.get('side')!=='0'&&(Q.get('side')==='1'||window.__CS_SIDE_DEFAULT);
+  var can=('documentPictureInPicture' in window)&&window.matchMedia('(min-width:900px)').matches&&Q.get('side')!=='0'&&window.top===window;
   if(!can)return;
-  var file=location.pathname.split('/').pop()||'index.html';
+  var file=FILE;
   function urlFor(l){
     var m=file.match(/^(.*?)(-(ar|en|fr))?\.html$/),base=m?m[1]:file.replace(/\.html$/,'');
     var q=new URLSearchParams(location.search);q.delete('side');q.set('pip','1');
@@ -22,7 +48,7 @@
   }
   var pipWin=null,host=null;
   function showHost(l){
-    var t=TXT[l]||TXT.he,rtl=(l==='he'||l==='ar'||!l);
+    var t=(TXT[l]||TXT.he).slice();if(ISLOGIN){var x=TXTL[l]||TXTL.he;t[1]=x[0];t[2]=x[1]}var rtl=(l==='he'||l==='ar'||!l);
     host=document.createElement('div');host.id='cs-side-host';host.dir=rtl?'rtl':'ltr';
     host.style.cssText='position:fixed;inset:0;z-index:2147483000;background:#f5f5f7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;font-family:system-ui,Arial,sans-serif;color:#1d1d1f';
     host.innerHTML='<div style="font-size:30px;font-weight:800">'+t[0]+'</div><div style="font-size:18px;color:#6e6e73;max-width:560px;line-height:1.5">'+t[1]+'</div>'+
