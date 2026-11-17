@@ -5,12 +5,17 @@
   const BASE='https://skuznitsky-clearshift.github.io/clearshift-guides/rec/';
   const ORDER=['he','en','ar','fr'];
   const KEY='cs_rec_done';
-  const W=ms=>new Promise(r=>setTimeout(r,ms));
+  // timers in a background tab are throttled by Chrome, so waits run through a Web Worker when possible
+  let wk=null,wid=0;const wait={};
+  try{const src='onmessage=function(e){setTimeout(function(){postMessage(e.data[0])},e.data[1])}';const u=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));
+    const pol=window.trustedTypes?trustedTypes.createPolicy('csrecw'+Date.now(),{createScriptURL:s=>s}):null;wk=new Worker(pol?pol.createScriptURL(u):u);
+    wk.onmessage=e=>{const f=wait[e.data];if(f){delete wait[e.data];f()}};wk.onerror=()=>{wk=null;Object.values(wait).forEach(f=>f())}}catch(e){wk=null}
+  const W=ms=>new Promise(r=>{if(wk){const id=++wid;wait[id]=r;wk.postMessage([id,ms])}else setTimeout(r,ms)});
   const vis=s=>[...document.querySelectorAll(s)].filter(e=>e.offsetParent);
   const done=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}};
   const mark=n=>{const d=done();if(!d.includes(n)){d.push(n);localStorage.setItem(KEY,JSON.stringify(d))}};
   const R=window.__rec={busy:false,log:[],stop:false,state:'idle',
-    status(){const d=done();return JSON.stringify({state:R.state,busy:R.busy,doneTotal:d.length,perLang:ORDER.map(l=>l+':'+d.filter(n=>n.startsWith('cs-'+l+'-')).length),session:R.log.slice(-30)})},
+    status(){const d=done();return JSON.stringify({state:R.state,worker:!!wk,busy:R.busy,doneTotal:d.length,perLang:ORDER.map(l=>l+':'+d.filter(n=>n.startsWith('cs-'+l+'-')).length),session:R.log.slice(-30)})},
     unmark(n){localStorage.setItem(KEY,JSON.stringify(done().filter(x=>x!==n)))},
     async start(max,langs){
       if(R.busy)return 'already running';R.busy=true;R.stop=false;R.log=[];R.state='loading lists';max=max||40;
@@ -33,7 +38,8 @@
           run.click();await W(2500);
           for(let i=0;i<120;i++){if(!vis('button').some(b=>b.innerText.trim().startsWith('progress_activity')))break;await W(1000)}
           let a,last=-1,same=0;
-          for(let i=0;i<60;i++){a=document.querySelector('audio');const dur=a&&a.src&&a.src!==before?a.duration:0;if(dur>1.5&&dur===last){same++;if(same>=3)break}else same=0;last=dur;await W(1000)}
+          for(let i=0;i<60;i++){a=document.querySelector('audio');const dur=a&&a.src&&a.src!==before?a.duration:0;if(dur>1.5&&dur===last){same++;if(same>=3)break}else same=0;last=dur;
+            if(i>=6&&!(dur>0)&&/quota limit reached/i.test(document.body.innerText))break;await W(1000)}
           if(!a||!a.src||a.src===before||!(last>1.5)){const q=/quota limit reached/i.test(document.body.innerText);R.log.push([name,q?'QUOTA':'NO AUDIO']);R.state=q?'STOP: daily quota reached':'STOP: no audio for '+name;break}
           const blob=await (await fetch(a.src)).blob();
           const expect=Math.round(last*48000+44);
