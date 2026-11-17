@@ -5,25 +5,23 @@
   const BASE='https://skuznitsky-clearshift.github.io/clearshift-guides/rec/';
   const ORDER=['he','en','ar','fr'];
   const KEY='cs_rec_done';
-  // timers in a background tab are throttled by Chrome, so waits run through a Web Worker when possible
-  let wk=null,wid=0;const wait={};
-  try{const src='onmessage=function(e){setTimeout(function(){postMessage(e.data[0])},e.data[1])}';const u=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));
-    const pol=window.trustedTypes?trustedTypes.createPolicy('csrecw'+Date.now(),{createScriptURL:s=>s}):null;wk=new Worker(pol?pol.createScriptURL(u):u);
-    wk.onmessage=e=>{const f=wait[e.data];if(f){delete wait[e.data];f()}};wk.onerror=()=>{wk=null;Object.values(wait).forEach(f=>f())}}catch(e){wk=null}
-  const W=ms=>new Promise(r=>{if(wk){const id=++wid;wait[id]=r;wk.postMessage([id,ms])}else setTimeout(r,ms)});
+  // Chrome throttles timers in a hidden tab; there, waits are driven by small network requests instead
+  const pause=ms=>new Promise(r=>setTimeout(r,ms));
+  const netWait=async ms=>{const t=Date.now();while(Date.now()-t<ms){try{await fetch(BASE+'ping.txt?'+Date.now(),{cache:'no-store'})}catch(e){await pause(200)}}};
+  const W=ms=>document.hidden?Promise.race([pause(ms),netWait(ms)]):pause(ms);
   const vis=s=>[...document.querySelectorAll(s)].filter(e=>e.offsetParent);
   const done=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}};
   const mark=n=>{const d=done();if(!d.includes(n)){d.push(n);localStorage.setItem(KEY,JSON.stringify(d))}};
   const R=window.__rec={busy:false,log:[],stop:false,state:'idle',
-    status(){const d=done();return JSON.stringify({state:R.state,worker:!!wk,busy:R.busy,doneTotal:d.length,perLang:ORDER.map(l=>l+':'+d.filter(n=>n.startsWith('cs-'+l+'-')).length),session:R.log.slice(-30)})},
+    status(){const d=done();return JSON.stringify({state:R.state,hidden:document.hidden,busy:R.busy,doneTotal:d.length,perLang:ORDER.map(l=>l+':'+d.filter(n=>n.startsWith('cs-'+l+'-')).length),session:R.log.slice(-30)})},
     unmark(n){localStorage.setItem(KEY,JSON.stringify(done().filter(x=>x!==n)))},
     async start(max,langs){
       if(R.busy)return 'already running';R.busy=true;R.stop=false;R.log=[];R.state='loading lists';max=max||40;
       try{
         // open a fresh dialog if the editor is not there yet
-        let ta=vis('textarea').sort((a,b)=>b.offsetWidth-a.offsetWidth)[0];
+        let ta;for(let i=0;i<12;i++){ta=vis('textarea').sort((a,b)=>b.offsetWidth-a.offsetWidth)[0];if(ta)break;await W(1000)}
         if(!ta){const b=[...document.querySelectorAll('button,[role=button],a,div,span')].filter(e=>e.offsetParent&&/Create new dialog/.test(e.textContent||'')).sort((a,b)=>(a.textContent||'').length-(b.textContent||'').length)[0];if(b){b.click();await W(3500)}}
-        const voice=(document.body.innerText.match(/Speaker 1 - (\w+)/)||[])[1];
+        let voice;for(let i=0;i<10;i++){voice=(document.body.innerText.match(/Speaker 1 - (\w+)/)||[])[1];if(voice)break;await W(1000)}
         if(voice!=='Fola'){R.state='STOP: voice is '+voice+' (expected Fola)';R.busy=false;return R.state}
         let todo=[];const d=done();
         for(const l of (langs||ORDER)){const r=await fetch(BASE+l+'.json?v='+Date.now());if(!r.ok)continue;for(const it of await r.json())if(!d.includes(it[0]))todo.push(it)}
