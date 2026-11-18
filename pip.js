@@ -33,6 +33,10 @@
   if(Q.get('pip')==='1'){            // we are inside the floating window: skip the language screen and start
     var go=function(){var b=document.querySelector('#lang a[data-l="he"]');if(b)b.click()};
     if(document.readyState==='complete')setTimeout(go,300);else window.addEventListener('load',function(){setTimeout(go,300)});
+    try{if(ISLOGIN&&typeof STEPS!=='undefined'){            // the sign-up page is already open next to the guide: drop the "open the page" step
+      var si=-1;STEPS.forEach(function(x,i){if(si<0&&x&&x.rows&&x.rows.join('').indexOf('setpassword')>=0)si=i});
+      if(si>0){STEPS.splice(si,1);var nh={};Object.keys(HERO).forEach(function(k){var n=+k;nh[n>si?n-1:n]=HERO[k]});Object.keys(HERO).forEach(function(k){delete HERO[k]});Object.keys(nh).forEach(function(k){HERO[k]=nh[k]});try{render()}catch(e){}}
+    }}catch(e){}
     var fix=function(){var a=document.querySelector('a.go[href*="setpassword"]');if(a&&a.parentElement)a.parentElement.innerHTML=DONE[FLANG]||DONE.he};
     var st=function(){fix();try{new MutationObserver(fix).observe(document.body,{childList:true,subtree:true})}catch(e){}};
     if(document.body)st();else document.addEventListener('DOMContentLoaded',st);
