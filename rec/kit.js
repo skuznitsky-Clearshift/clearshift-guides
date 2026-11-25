@@ -67,7 +67,7 @@
         if(voice!=='Fola'){R.state='STOP: voice is '+voice+' (expected Fola)';R.busy=false;return R.state}
         let todo=[];const d=done();
         for(const l of (langs||ORDER)){const r=await fetch(BASE+l+'.json?v='+Date.now());if(!r.ok)continue;for(const it of await r.json())if(!d.includes(it[0]))todo.push(it)}
-        R.state='recording, '+todo.length+' left in total';let n=0;
+        if(R.prefer){const p=R.prefer;todo.sort((a,b)=>(b[0].includes(p)?1:0)-(a[0].includes(p)?1:0))}R.state='recording, '+todo.length+' left in total';let n=0;
         for(const [name,text] of todo){
           if(R.stop||n>=max)break;
           ta=vis('textarea').sort((a,b)=>b.offsetWidth-a.offsetWidth)[0];
